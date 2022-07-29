@@ -1,4 +1,3 @@
-
 <template>
   <div id="app">
     <div id="main">
@@ -10,7 +9,7 @@
       </div>
       <div class="content">
         <div class="msgLi" v-for="item in msgList" :key="item.message">
-          <dd :class="'img' + (item.isSelf ? 'right' : 'left')">
+          <dd :class="'img' + (item.isSelf ? 'Right' : 'Left')">
             <i class="i">
               <img
                 :src="
@@ -18,17 +17,17 @@
                     ? require('@/images/user.png')
                     : require('@/images/r.jpg')
                 "
-                :class="'img' + (item.isSelf ? 'right' : 'left')"
+                :class="'img' + (item.isSelf ? 'Right' : 'Left')"
               />
             </i>
             <div class="msgBox">
-              <div class="send">
+              <div :class="'send' + (item.isSelf ? 'Right' : 'Left')">
                 {{ item.isSelf ? " " : "东芝客服-小芝" }}
                 {{ nowTime }}
               </div>
               <div
                 id="msgSpan"
-                :class="'span' + (item.isSelf ? 'right' : 'left')"
+                :class="'span' + (item.isSelf ? 'Right' : 'Left')"
               >
                 <div>
                   <el-tree
@@ -50,34 +49,26 @@
       </div>
       <div class="footer">
         <div class="bar">
-          <el-button
-            class="sendButten"
-            type="text"
-            @click="dialogFormVisible = true"
+          <el-button class="sendButten" @click="dialogVisible = true"
             >留言</el-button
           >
-          <el-dialog title="收货地址" :visible.sync="dialogFormVisible">
-            <el-form :model="form">
-              <el-form-item label="活动名称" :label-width="formLabelWidth">
-                <el-input v-model="form.name" autocomplete="off"></el-input>
-              </el-form-item>
-              <el-form-item label="活动区域" :label-width="formLabelWidth">
-                <el-select v-model="form.region" placeholder="请选择活动区域">
-                  <el-option label="区域一" value="shanghai"></el-option>
-                  <el-option label="区域二" value="beijing"></el-option>
-                </el-select>
-              </el-form-item>
-            </el-form>
-            <div slot="footer" class="dialog-footer">
-              <el-button @click="dialogFormVisible = false">取 消</el-button>
-              <el-button type="primary" @click="dialogFormVisible = false"
+          <el-dialog
+            title="留言"
+            :visible.sync="dialogVisible"
+            width="30%"
+            :append-to-body="true"
+          >
+            <span>这是一段信息</span>
+            <span slot="footer" class="dialog-footer">
+              <el-button @click="dialogVisible = false">取 消</el-button>
+              <el-button type="primary" @click="dialogVisible = false"
                 >确 定</el-button
               >
-            </div>
+            </span>
           </el-dialog>
           <div class="evaluation">
-            <!-- <p></p> -->
-            <el-rate v-model="value" show-text>请您对机器人评价? </el-rate>
+            <p>您对机器人的评价?</p>
+            <el-rate v-model="rateValue" :texts="texts" show-text> </el-rate>
           </div>
         </div>
         <div class="messageBoard">
@@ -110,23 +101,24 @@ export default {
         label: "comQuestion",
       },
       input: "",
-      dialogTableVisible: false,
-      dialogFormVisible: false,
-      form: {
-        name: "",
-        region: "",
-        date1: "",
-        date2: "",
-        delivery: false,
-        type: [],
-        resource: "",
-        desc: "",
-      },
+      dialogVisible: false,
       formLabelWidth: "120px",
       nowTime: "",
+      texts: ["非常不满意", "不满意", "一般满意", "满意", "非常满意"],
+      rateValue: null,
     };
   },
-  watch: {},
+  watch: {
+    input: {
+      function() {
+        if (this.input.length) {
+          this.disabled = false;
+        } else {
+          this.disabled = true;
+        }
+      },
+    },
+  },
   created() {
     let msg = [
       {
@@ -149,6 +141,7 @@ export default {
             list[i].subList = this._.flatten(list[i].subList);
           }
           this.pushMsgList(list);
+          console.log(list);
         }
       } catch (error) {
         console.log("Request Failed", error);
@@ -158,11 +151,25 @@ export default {
     //树形控件点击事件
     handleNodeClick(data) {
       console.log(data);
+      if (data.parentId) {
+        let msg = [
+          {
+            comQuestion: data.comAnswer,
+          },
+        ];
+        let aa = true;
+        this.pushMsgList(msg, aa);
+      }
     },
     //发送按钮事件
     sendSelfMsg() {
       console.log(this.input);
-      this.pushMsgList(this.input, true);
+      let msg = [
+        {
+          comQuestion: this.input,
+        },
+      ];
+      this.pushMsgList(msg, true);
       this.getNowTime();
       this.input = "";
     },
@@ -170,11 +177,7 @@ export default {
     //添加信息
     pushMsgList(msg, bar) {
       let buer = bar | false;
-      let msgs = [
-        {
-          comQuestion: msg,
-        },
-      ];
+      let msgs = msg;
       console.log(msg);
       this.getNowTime();
       this.msgList.push({
@@ -206,6 +209,19 @@ export default {
       }
       return realNum;
     },
+
+    //跳转聊天位置
+    // jump() {
+    //   this.$nextTick(() => {
+    //     let el = this.scrollContainer;
+    //     el.scrollTop = el.scrollHeight - el.clientHeight;
+    //     // console.log(el, el.scrollTop, el.scrollHeight, el.clientHeight)
+    //   });
+    // },
+    //对话框事件
+    // handleClose(done) {
+
+    // },
   },
 
   // 销毁时
@@ -234,8 +250,6 @@ export default {
 }
 
 #main {
-  /* margin-top: -215px;
-  margin-left: -469px; */
   position: fixed;
   top: 50%;
   left: 50%;
@@ -261,8 +275,6 @@ export default {
 #main .header .left .img {
   width: 40px;
   height: 40px;
-  /* border-radius: 50%; */
-  /* -webkit-border-radius: 50%; */
   vertical-align: middle;
   display: block;
 }
@@ -289,11 +301,11 @@ export default {
   box-sizing: border-box;
 }
 
-@media screen and (min-width: 768px) {
+/* @media screen and (min-width: 768px) {
   .content .msgLi {
     max-width: 60%;
   }
-}
+} */
 
 .content .msgLi {
   margin-top: 10px;
@@ -308,6 +320,10 @@ export default {
   display: block;
   /*清除两侧的浮动*/
   clear: both;
+}
+
+.content .msgLi dd {
+  display: flex;
 }
 
 .content .msgLi .msgBox {
@@ -328,7 +344,7 @@ export default {
   box-shadow: 0 0 3px #ccc;
 }
 
-.content .msgLi .send {
+.content .msgLi .sendLeft {
   left: 8px;
   text-align: left;
   margin-left: 25px;
@@ -337,15 +353,26 @@ export default {
   color: rgba(36, 46, 51, 0.4);
 }
 
-.content .msgLi .imgleft {
+.content .msgLi .sendRight {
+  right: 8px;
+  text-align: right;
+  margin-right: 25px;
+  line-height: 1.8;
+  font-size: 13px;
+  color: rgba(36, 46, 51, 0.4);
+}
+
+.content .msgLi .imgLeft {
   float: left;
 }
 
-.content .msgLi .imgright {
+.content .msgLi .imgRight {
   float: right;
+  flex-direction: row-reverse;
+  margin-top: 15px;
 }
 
-.content .msgLi .spanleft {
+.content .msgLi .spanLeft {
   float: left;
   background: #fff;
   text-align: left;
@@ -355,9 +382,9 @@ export default {
   font-size: 15px;
 }
 
-.content .msgLi .spanright {
+.content .msgLi .spanRight {
   float: right;
-  background: #fff;
+  /* background: #fff; */
   text-align: right;
   margin-right: 25px;
   padding: 8px 12px;
@@ -370,7 +397,7 @@ export default {
   justify-content: space-between;
 }
 
-.content .msgLi .spanleft::after {
+.content .msgLi .spanLeft::after {
   content: "";
   position: absolute;
   width: 0;
@@ -382,17 +409,17 @@ export default {
   border-right: 10px solid #fff;
 }
 
-.content .msgLi .spanright {
+.content .msgLi .spanRight {
   float: right;
   background: #7cfc00;
-  text-align: right;
+  /* text-align: right; */
   margin-right: 25px;
   padding: 8px 12px;
   border-radius: 8px;
   font-size: 15px;
 }
 
-.content .msgLi .spanright {
+.content .msgLi .spanRight::after {
   content: "";
   position: absolute;
   width: 0;
@@ -419,6 +446,12 @@ export default {
 #main .footer .bar .evaluation {
   display: flex;
   align-items: center;
+}
+
+#main .footer .bar .evaluation p {
+  margin-right: 15px;
+  font-size: 13px;
+  color: rgba(36, 46, 51, 0.4);
 }
 #main .footer .messageBoard {
   height: 110px;
@@ -448,6 +481,11 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.content .msgLi .spanRight .el-tree-node__label{
+  white-space: pre-wrap;
+
 }
 
 .el-tree-node > .el-tree-node__children {
@@ -480,5 +518,33 @@ export default {
 
 .el-button {
   margin-right: 20px;
+}
+
+.el-dialog__header {
+  background-color: #4b7edc;
+}
+
+.el-dialog__header .el-dialog__title {
+  color: #fff;
+  font-weight: 450;
+}
+
+.el-dialog__header,
+.el-icon-close:before {
+  color: #fff;
+}
+
+.el-rate {
+  position: relative;
+}
+
+.el-rate .el-rate__text {
+  position: absolute;
+  left: -130px;
+  width: 130px;
+  padding: 1px;
+  color: rgba(36, 46, 51, 0.4) !important;
+  background-color: #f5f5f5;
+  z-index: 99;
 }
 </style>
